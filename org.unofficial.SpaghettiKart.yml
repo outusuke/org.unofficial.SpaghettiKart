@@ -18,8 +18,17 @@ modules:
     buildsystem: simple
     build-commands:
       - mkdir -p /app/lib/spaghettikart
-      - cp -a src/. /app/lib/spaghettikart/
-      - find /app/lib/spaghettikart -maxdepth 2 -type f -iname 'spaghett*' ! -name '*.o2r' ! -name '*.yml' ! -name '*.zip' -exec chmod +x {} +
+      - |
+        cd src
+        APPIMAGE=$(find . -iname '*.appimage' | head -n 1)
+        if [ -n "$APPIMAGE" ]; then
+          chmod +x "$APPIMAGE"
+          "$APPIMAGE" --appimage-extract
+          cp -a squashfs-root/. /app/lib/spaghettikart/
+        else
+          cp -a . /app/lib/spaghettikart/
+        fi
+      - find /app/lib/spaghettikart -type f \( -name AppRun -o -iname 'spaghett*' \) ! -name '*.o2r' ! -name '*.yml' ! -name '*.desktop' ! -name '*.png' ! -name '*.svg' -exec chmod +x {} +
       - install -Dm755 spaghetti-launch /app/bin/spaghetti-launch
       - install -Dm644 org.unofficial.SpaghettiKart.desktop -t /app/share/applications
     sources:
@@ -31,11 +40,12 @@ modules:
       - type: script
         dest-filename: spaghetti-launch
         commands:
-          - D="${XDG_DATA_HOME:-$HOME/.local/share}/spaghettikart"
+          - D="${XDG_DATA_HOME:-$HOME/.local/share}/spaghettikart-bin"
           - mkdir -p "$D"
           - cp -a /app/lib/spaghettikart/. "$D/"
-          - BIN=$(find "$D" -maxdepth 2 -type f -iname 'spaghett*' ! -name '*.o2r' ! -name '*.yml' ! -name '*.zip' | head -n 1)
-          - cd "$(dirname "$BIN")"
-          - exec "$BIN" "$@"
+          - O2R=$(find "$D" -name 'spaghetti.o2r' | head -n 1)
+          - if [ -n "$O2R" ]; then cd "$(dirname "$O2R")"; fi
+          - if [ -x "$D/AppRun" ]; then exec "$D/AppRun" "$@"; fi
+          - exec "$(find "$D" -type f -iname 'spaghettify' | head -n 1)" "$@"
       - type: file
         path: org.unofficial.SpaghettiKart.desktop
