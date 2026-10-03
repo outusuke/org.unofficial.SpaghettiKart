@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=SpaghettiKart
+Comment=Unofficial Flatpak of SpaghettiKart (Mario Kart 64 PC port)
+Exec=spaghetti-launch
+Categories=Game;
