@@ -1,0 +1,41 @@
+app-id: org.unofficial.SpaghettiKart
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+command: spaghetti-launch
+
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=x11
+  - --socket=wayland
+  - --socket=pulseaudio
+  - --device=all
+  - --filesystem=xdg-download:ro
+
+modules:
+  - name: spaghettikart
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/lib/spaghettikart
+      - cp -a src/. /app/lib/spaghettikart/
+      - find /app/lib/spaghettikart -maxdepth 2 -type f -iname 'spaghett*' ! -name '*.o2r' ! -name '*.yml' ! -name '*.zip' -exec chmod +x {} +
+      - install -Dm755 spaghetti-launch /app/bin/spaghetti-launch
+      - install -Dm644 org.unofficial.SpaghettiKart.desktop -t /app/share/applications
+    sources:
+      - type: archive
+        url: https://github.com/HarbourMasters/SpaghettiKart/releases/download/1.0.0/spaghetti-linux.zip
+        sha256: 54e249bd4aa71e55c63239c9c1c0eb522b07497d85f2ede193907059e4de250c
+        strip-components: 0
+        dest: src
+      - type: script
+        dest-filename: spaghetti-launch
+        commands:
+          - D="${XDG_DATA_HOME:-$HOME/.local/share}/spaghettikart"
+          - mkdir -p "$D"
+          - cp -a /app/lib/spaghettikart/. "$D/"
+          - BIN=$(find "$D" -maxdepth 2 -type f -iname 'spaghett*' ! -name '*.o2r' ! -name '*.yml' ! -name '*.zip' | head -n 1)
+          - cd "$(dirname "$BIN")"
+          - exec "$BIN" "$@"
+      - type: file
+        path: org.unofficial.SpaghettiKart.desktop
